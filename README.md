@@ -1,6 +1,6 @@
-# Prisma NestJS DTO Generator
+# Prisma NestJS Swagger Generator
 
-[`prisma-generator-nestjs-dto`](https://www.npmjs.com/package/prisma-generator-nestjs-dto) - A [Prisma generator](https://www.prisma.io/docs/concepts/components/prisma-schema/generators) that creates TypeScript DTOs with NestJS Swagger support from Prisma schema.
+[`prisma-nestjs-swagger-generator`](https://www.npmjs.com/package/prisma-nestjs-swagger-generator) - A [Prisma generator](https://www.prisma.io/docs/concepts/components/prisma-schema/generators) that creates TypeScript DTOs with NestJS Swagger support from Prisma schema.
 
 > This package is a fork of [prisma-generator-typescript-interfaces](https://www.npmjs.com/package/prisma-generator-typescript-interfaces) with added support for NestJS Swagger.
 
@@ -22,14 +22,14 @@ The generated file will not contain any runtime dependencies and can be used sta
 To use this generator, first install the package:
 
 ```
-npm install --save-dev prisma-generator-nestjs-dto
+npm install --save-dev prisma-nestjs-swagger-generator
 ```
 
 Next add the generator to your Prisma schema:
 
 ```prisma
 generator nestjsDto {
-  provider = "prisma-generator-nestjs-dto"
+  provider = "prisma-nestjs-swagger-generator"
 }
 ```
 
