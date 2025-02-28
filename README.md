@@ -39,11 +39,140 @@ And finally generate your Prisma schema:
 npx prisma generate
 ```
 
-By default, that will output the TypeScript interface definitions to a file called `interfaces.ts` in your `prisma` folder, but this can be changed by specifying the `output` option. As mentioned above, the generated types will, by default, be [type-compatible](https://www.typescriptlang.org/docs/handbook/type-compatibility.html) with the Prisma client types. If you instead want to generate types matching the `JSON.stringify`-ed versions of your models, you will need to change some of the options, like so:
+## NestJS Swagger Support
+
+This generator supports creating classes with NestJS Swagger decorators, which can be used directly in your NestJS application for API documentation. To enable this feature, set the `modelType` to `"class"` and `nestjsSwagger` to `true`:
 
 ```prisma
-generator typescriptInterfaces {
-  provider    = "prisma-generator-typescript-interfaces"
+generator nestjsDto {
+  provider = "prisma-nestjs-swagger-generator"
+  output = "../src/dto/interfaces.ts"
+  modelType = "class"
+  nestjsSwagger = "true"
+}
+```
+
+This will generate TypeScript classes with `@ApiProperty` decorators that include:
+
+- Type information for each property
+- Required/optional status
+- Enum values for enum fields
+- Array type information
+
+### Using with NestJS
+
+To use the generated classes in your NestJS application:
+
+1. Make sure you have `@nestjs/swagger` installed:
+
+```bash
+npm install --save @nestjs/swagger
+```
+
+2. Import and use the generated classes in your controllers:
+
+```typescript
+import { Controller, Get, Post, Body } from "@nestjs/common";
+import { ApiTags, ApiOperation } from "@nestjs/swagger";
+import { User, Post as BlogPost } from "./dto/interfaces";
+
+@ApiTags("users")
+@Controller("users")
+export class UsersController {
+  @Get()
+  @ApiOperation({ summary: "Get all users" })
+  findAll(): User[] {
+    // Your implementation
+  }
+
+  @Post()
+  @ApiOperation({ summary: "Create a user" })
+  create(@Body() user: User): User {
+    // Your implementation
+  }
+}
+```
+
+3. The Swagger UI will automatically use the `@ApiProperty` decorators to generate documentation for your API.
+
+### Example NestJS Swagger Output
+
+<details>
+<summary>Example output with NestJS Swagger decorators</summary>
+
+```typescript
+import { ApiProperty } from "@nestjs/swagger";
+
+type JsonValue =
+  | string
+  | number
+  | boolean
+  | { [key in string]?: JsonValue }
+  | Array<JsonValue>
+  | null;
+
+export type UserRole = "ADMIN" | "USER" | "GUEST";
+
+export class User {
+  @ApiProperty({ required: true })
+  id: number;
+
+  @ApiProperty({ required: true })
+  email: string;
+
+  @ApiProperty({ required: false })
+  name: string | null;
+
+  @ApiProperty({ enumName: "UserRole", enum: ["ADMIN", "USER", "GUEST"], required: true })
+  role: UserRole;
+
+  @ApiProperty({ isArray: true, required: false })
+  posts?: Post[];
+
+  @ApiProperty({ required: false })
+  profile: Profile | null;
+
+  @ApiProperty({ type: "string", required: true })
+  createdAt: Date;
+
+  @ApiProperty({ type: "string", required: true })
+  updatedAt: Date;
+}
+
+export class Post {
+  @ApiProperty({ required: true })
+  id: number;
+
+  @ApiProperty({ required: true })
+  title: string;
+
+  @ApiProperty({ required: false })
+  content: string | null;
+
+  @ApiProperty({ required: true })
+  published: boolean;
+
+  @ApiProperty({ type: () => User, required: false })
+  author?: User;
+
+  @ApiProperty({ required: true })
+  authorId: number;
+
+  @ApiProperty({ type: "string", required: true })
+  createdAt: Date;
+
+  @ApiProperty({ type: "string", required: true })
+  updatedAt: Date;
+}
+```
+
+</details>
+
+By default, the generator will output the TypeScript interface definitions to a file called `interfaces.ts` in your `prisma` folder, but this can be changed by specifying the `output` option. As mentioned above, the generated types will, by default, be [type-compatible](https://www.typescriptlang.org/docs/handbook/type-compatibility.html) with the Prisma client types. If you instead want to generate types matching the `JSON.stringify`-ed versions of your models, you will need to change some of the options, like so:
+
+```prisma
+generator nestjsDto {
+  provider    = "prisma-nestjs-swagger-generator"
   dateType    = "string"
   bigIntType  = "string"
   decimalType = "string"
@@ -97,14 +226,15 @@ generator client {
   provider = "prisma-client-js"
 }
 
-generator typescriptInterfaces {
-  provider = "prisma-generator-typescript-interfaces"
+generator nestjsDto {
+  provider = "prisma-nestjs-swagger-generator"
   output = "../src/dto/interfaces.ts"
-  prettier = true
+  modelType = "class"
+  nestjsSwagger = "true"
 }
 
-generator typescriptInterfacesJson {
-  provider = "prisma-generator-typescript-interfaces"
+generator nestjsDtoJson {
+  provider = "prisma-nestjs-swagger-generator"
   output = "../src/dto/json-interfaces.ts"
   modelSuffix = "Json"
   dateType = "string"
@@ -335,138 +465,9 @@ type BufferObject = { type: "Buffer"; data: number[] };
 
 </details>
 
-## NestJS Swagger Support
-
-This generator supports creating classes with NestJS Swagger decorators, which can be used directly in your NestJS application for API documentation. To enable this feature, set the `modelType` to `"class"` and `nestjsSwagger` to `true`:
-
-```prisma
-generator typescriptInterfaces {
-  provider = "prisma-generator-typescript-interfaces"
-  output = "../src/dto/interfaces.ts"
-  modelType = "class"
-  nestjsSwagger = "true"
-}
-```
-
-This will generate TypeScript classes with `@ApiProperty` decorators that include:
-
-- Type information for each property
-- Required/optional status
-- Enum values for enum fields
-- Array type information
-
-### Example NestJS Swagger Output
-
-<details>
-<summary>Example output with NestJS Swagger decorators</summary>
-
-```typescript
-import { ApiProperty } from "@nestjs/swagger";
-
-type JsonValue =
-  | string
-  | number
-  | boolean
-  | { [key in string]?: JsonValue }
-  | Array<JsonValue>
-  | null;
-
-export type UserRole = "ADMIN" | "USER" | "GUEST";
-
-export class User {
-  @ApiProperty({ required: true })
-  id: number;
-
-  @ApiProperty({ required: true })
-  email: string;
-
-  @ApiProperty({ required: false })
-  name: string | null;
-
-  @ApiProperty({ enumName: "UserRole", enum: ["ADMIN", "USER", "GUEST"], required: true })
-  role: UserRole;
-
-  @ApiProperty({ isArray: true, required: false })
-  posts?: Post[];
-
-  @ApiProperty({ required: false })
-  profile: Profile | null;
-
-  @ApiProperty({ type: "string", required: true })
-  createdAt: Date;
-
-  @ApiProperty({ type: "string", required: true })
-  updatedAt: Date;
-}
-
-export class Post {
-  @ApiProperty({ required: true })
-  id: number;
-
-  @ApiProperty({ required: true })
-  title: string;
-
-  @ApiProperty({ required: false })
-  content: string | null;
-
-  @ApiProperty({ required: true })
-  published: boolean;
-
-  @ApiProperty({ type: () => User, required: false })
-  author?: User;
-
-  @ApiProperty({ required: true })
-  authorId: number;
-
-  @ApiProperty({ type: "string", required: true })
-  createdAt: Date;
-
-  @ApiProperty({ type: "string", required: true })
-  updatedAt: Date;
-}
-```
-
-</details>
-
-### Using with NestJS
-
-To use the generated classes in your NestJS application:
-
-1. Make sure you have `@nestjs/swagger` installed:
-
-```bash
-npm install --save @nestjs/swagger
-```
-
-2. Import and use the generated classes in your controllers:
-
-```typescript
-import { Controller, Get, Post, Body } from "@nestjs/common";
-import { ApiTags, ApiOperation } from "@nestjs/swagger";
-import { User, Post as BlogPost } from "./dto/interfaces";
-
-@ApiTags("users")
-@Controller("users")
-export class UsersController {
-  @Get()
-  @ApiOperation({ summary: "Get all users" })
-  findAll(): User[] {
-    // Your implementation
-  }
-
-  @Post()
-  @ApiOperation({ summary: "Create a user" })
-  create(@Body() user: User): User {
-    // Your implementation
-  }
-}
-```
-
-3. The Swagger UI will automatically use the `@ApiProperty` decorators to generate documentation for your API.
-
 ## Issues
 
-Please report any issues to the [issues](https://github.com/mogzol/prisma-generator-typescript-interfaces/issues) page. I am actively using this package, so I'll try my best to address any issues that are reported. Alternatively, feel free to submit a PR.
+Please report any issues to the [issues](https://github.com/wsgfz/prisma-nestjs-swagger-generator/issues) page. I am actively using this package, so I'll try my best to address any issues that are reported. Alternatively, feel free to submit a PR.
 
 ## Developing
 
