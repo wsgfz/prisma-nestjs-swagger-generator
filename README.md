@@ -1,24 +1,35 @@
-# Prisma TypeScript Interfaces Generator
+# Prisma NestJS DTO Generator
 
-[`prisma-generator-typescript-interfaces`](https://www.npmjs.com/package/prisma-generator-typescript-interfaces) - A [Prisma generator](https://www.prisma.io/docs/concepts/components/prisma-schema/generators) that creates zero-dependency TypeScript interfaces from Prisma schema.
+[`prisma-generator-nestjs-dto`](https://www.npmjs.com/package/prisma-generator-nestjs-dto) - A [Prisma generator](https://www.prisma.io/docs/concepts/components/prisma-schema/generators) that creates TypeScript DTOs with NestJS Swagger support from Prisma schema.
+
+> This package is a fork of [prisma-generator-typescript-interfaces](https://www.npmjs.com/package/prisma-generator-typescript-interfaces) with added support for NestJS Swagger.
 
 ## Motivation
 
-While Prisma client's generated types are sufficient for most use cases, there are some scenarios where using them is not convenient or possible, due to the fact that they rely on both the `@prisma/client` package and on the client generated from your Prisma schema. That is where this generator comes in. It generates a zero-dependency TypeScript file containing type definitions for all your models. This file will not contain any imports and can be used standalone in any TypeScript app. By default, the definitions are [type-compatible](https://www.typescriptlang.org/docs/handbook/type-compatibility.html) with the Prisma client types, however this can be customized via the [options](#options), see below for more info.
+While Prisma client's generated types are sufficient for most use cases, there are some scenarios where using them is not convenient or possible, due to the fact that they rely on both the `@prisma/client` package and on the client generated from your Prisma schema.
+
+Additionally, when working with NestJS and Swagger, you need proper DTO classes with decorators, which Prisma doesn't provide out of the box.
+
+This generator solves both problems by generating:
+
+1. Zero-dependency TypeScript interfaces/types (like the original package)
+2. TypeScript classes with NestJS Swagger `@ApiProperty` decorators (new feature)
+
+The generated file will not contain any runtime dependencies and can be used standalone in any TypeScript app.
 
 ## Usage
 
 To use this generator, first install the package:
 
 ```
-npm install --save-dev prisma-generator-typescript-interfaces
+npm install --save-dev prisma-generator-nestjs-dto
 ```
 
 Next add the generator to your Prisma schema:
 
 ```prisma
-generator typescriptInterfaces {
-  provider = "prisma-generator-typescript-interfaces"
+generator nestjsDto {
+  provider = "prisma-generator-nestjs-dto"
 }
 ```
 
