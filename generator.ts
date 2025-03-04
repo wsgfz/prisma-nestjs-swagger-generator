@@ -117,7 +117,7 @@ function getModelTs(
   const fields = modelData.fields
     .map(({ name, kind, type, isRequired, isList }) => {
       // Function to add ApiProperty decorator
-      const getApiPropertyDecorator = (resolvedType: string, isEnum = false) => {
+      const getApiPropertyDecorator = (resolvedType: string, isEnum = false, originalType?: string) => {
         if (!config.nestjsSwagger || config.modelType !== "class") return "";
 
         const options: string[] = [];
@@ -161,27 +161,45 @@ function getModelTs(
         }
 
         // Handle special types
-        if (resolvedType === "Decimal" || config.decimalType === "Decimal") {
-          // For Decimal type, use string
-          options.push(`type: 'string'`);
-        } else if (resolvedType === "bigint") {
-          // For BigInt type, use string
-          options.push(`type: 'BigInt'`);
-        } else if (
-          resolvedType !== "string" &&
-          resolvedType !== "number" &&
-          resolvedType !== "boolean" &&
-          resolvedType !== "JsonValue"
-        ) {
-          // For other non-basic types, use type option
+        if (originalType) {
+          switch (originalType) {
+            case "String":
+              options.push(`type: String`);
+              break;
+            case "Boolean":
+              options.push(`type: Boolean`);
+              break;
+            case "Int":
+            case "Float":
+              options.push(`type: Number`);
+              break;
+            case "DateTime":
+              options.push(`type: Date`);
+              break;
+            case "Json":
+              options.push(`type: Object`);
+              break;
+            case "BigInt":
+              options.push(`type: BigInt`);
+              break;
+            case "Decimal":
+              options.push(`type: 'string'`);
+              break;
+            case "Bytes":
+              options.push(`type: 'Buffer'`);
+              break;
+            default:
+              options.push(`type: () => ${resolvedType}`);
+          }
+        } else {
           options.push(`type: () => ${resolvedType}`);
         }
 
         return `  @ApiProperty(${options.length ? `{ ${options.join(", ")} }` : ""})\n`;
       };
 
-      const getDefinition = (resolvedType: string, optional = false, isEnum = false) => {
-        const apiPropertyDecorator = getApiPropertyDecorator(resolvedType, isEnum);
+      const getDefinition = (resolvedType: string, optional = false, isEnum = false, originalType?: string) => {
+        const apiPropertyDecorator = getApiPropertyDecorator(resolvedType, isEnum, originalType);
         return (
           apiPropertyDecorator +
           "  " +
@@ -200,7 +218,8 @@ function getModelTs(
           if (resolvedType in CUSTOM_TYPES) {
             usedCustomTypes.add(resolvedType as keyof typeof CUSTOM_TYPES);
           }
-          return getDefinition(resolvedType);
+          // Pass the original Prisma type to getApiPropertyDecorator
+          return getDefinition(resolvedType, false, false, type);
         }
         case "object": {
           const modelName = modelNameMap.get(type);
@@ -208,7 +227,7 @@ function getModelTs(
           if (typeName) {
             return getDefinition(typeName); // Type relations are never optional or omitted
           } else if (modelName) {
-            return config.omitRelations ? null : getDefinition(modelName, config.optionalRelations);
+            return config.omitRelations ? null : getDefinition(modelName, config.optionalRelations, false, type);
           } else {
             throw new Error(`Unknown model name: ${type}`);
           }
@@ -218,7 +237,7 @@ function getModelTs(
           if (!enumName) {
             throw new Error(`Unknown enum name: ${type}`);
           }
-          return getDefinition(enumName, false, true);
+          return getDefinition(enumName, false, true, type);
         }
         case "unsupported":
           return getDefinition("any");
