@@ -117,7 +117,11 @@ function getModelTs(
   const fields = modelData.fields
     .map(({ name, kind, type, isRequired, isList }) => {
       // Function to add ApiProperty decorator
-      const getApiPropertyDecorator = (resolvedType: string, isEnum = false, originalType?: string) => {
+      const getApiPropertyDecorator = (
+        resolvedType: string,
+        isEnum = false,
+        originalType?: string,
+      ) => {
         if (!config.nestjsSwagger || config.modelType !== "class") return "";
 
         const options: string[] = [];
@@ -198,7 +202,12 @@ function getModelTs(
         return `  @ApiProperty(${options.length ? `{ ${options.join(", ")} }` : ""})\n`;
       };
 
-      const getDefinition = (resolvedType: string, optional = false, isEnum = false, originalType?: string) => {
+      const getDefinition = (
+        resolvedType: string,
+        optional = false,
+        isEnum = false,
+        originalType?: string,
+      ) => {
         const apiPropertyDecorator = getApiPropertyDecorator(resolvedType, isEnum, originalType);
         return (
           apiPropertyDecorator +
@@ -227,7 +236,9 @@ function getModelTs(
           if (typeName) {
             return getDefinition(typeName); // Type relations are never optional or omitted
           } else if (modelName) {
-            return config.omitRelations ? null : getDefinition(modelName, config.optionalRelations, false, type);
+            return config.omitRelations
+              ? null
+              : getDefinition(modelName, config.optionalRelations, false, type);
           } else {
             throw new Error(`Unknown model name: ${type}`);
           }
