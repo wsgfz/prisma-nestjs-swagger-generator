@@ -6,7 +6,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/wsgfz/prisma-nestjs-swagger-generator"
+    "url": "git+https://github.com/wsgfz/prisma-nestjs-swagger-generator.git"
   },
   "type": "module",
   "main": "generator.js",
