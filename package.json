@@ -1,6 +1,6 @@
 {
   "name": "prisma-nestjs-swagger-generator",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Generate TypeScript DTOs with NestJS Swagger support from Prisma schema",
   "author": "wsgfz (forked from Morgan Zolob's prisma-generator-typescript-interfaces)",
   "license": "MIT",
