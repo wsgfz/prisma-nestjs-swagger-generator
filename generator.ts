@@ -181,8 +181,8 @@ function getModelTs(
               options.push(`type: Date`);
               break;
             case "Json":
-              options.push(`type: Object`);
-              break;
+              // Use JsonValueApiProperty with existing options
+              return `  @JsonValueApiProperty({ ${options.join(", ")} })\n`;
             case "BigInt":
               options.push(`type: BigInt`);
               break;
@@ -354,6 +354,35 @@ generatorHandler({
     if (config.nestjsSwagger && config.modelType === "class") {
       // Add ApiProperty import
       let imports = `import { ApiProperty } from "@nestjs/swagger";\n\n`;
+
+      // Add JsonValueApiProperty definition
+      imports += `export const JsonValueApiProperty = (options: Parameters<typeof ApiProperty>[0] = {}) => {
+  return ApiProperty({
+    ...options,
+    oneOf: [
+      { type: 'string' },
+      { type: 'number' },
+      { type: 'boolean' },
+      { 
+        type: 'object',
+        additionalProperties: true
+      },
+      { 
+        type: 'array',
+        items: {
+          oneOf: [
+            { type: 'string' },
+            { type: 'number' },
+            { type: 'boolean' },
+            { type: 'object' },
+            { type: 'array', items: { type: 'object' } }
+          ]
+        }
+      }
+    ],
+    nullable: true
+  });
+};\n\n`;
 
       // Add custom type definitions to the top of the file
       if (usedCustomTypes.size > 0) {
