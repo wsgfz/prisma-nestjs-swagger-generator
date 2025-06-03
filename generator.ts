@@ -114,7 +114,7 @@ function getModelTs(
   usedCustomTypes: Set<keyof typeof CUSTOM_TYPES>,
   enums: DMMF.DatamodelEnum[],
 ): string {
-  const fields = modelData.fields
+  const fieldDefinitions = modelData.fields
     .map(({ name, kind, type, isRequired, isList }) => {
       // Function to add ApiProperty decorator
       const getApiPropertyDecorator = (
@@ -256,8 +256,17 @@ function getModelTs(
           throw new Error(`Unknown field kind: ${kind}`);
       }
     })
-    .filter((f) => f !== null)
-    .join("\n");
+    .filter((f) => f !== null);
+
+  // Add proper spacing for nestjsSwagger decorators
+  let fields: string;
+  if (config.nestjsSwagger && config.modelType === "class") {
+    // Join fields with double newlines to add blank lines above decorators
+    fields = fieldDefinitions.join("\n\n");
+  } else {
+    // Use single newlines for other cases
+    fields = fieldDefinitions.join("\n");
+  }
 
   const name = modelNameMap.get(modelData.name) ?? typeNameMap.get(modelData.name);
 
